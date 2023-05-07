@@ -1,8 +1,7 @@
 SELECT
     id,
-    title,
-    descr
+    heading_level,
 FROM
-    notes
+    headings
 WHERE
     id = ?1

@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
-use rusqlite::Params;
+use rusqlite::{Params, Row, Statement};
+use serde_json::Value;
 use uuid::Uuid;
 
 pub trait Title
@@ -41,6 +42,10 @@ pub trait Kind {
     fn kind(&self) -> String {
         String::new()
     }
+
+    fn kind_const() -> String {
+        String::new()
+    }
 }
 
 pub trait Named {
@@ -57,6 +62,16 @@ pub trait SqlExec {
     }
 }
 
+pub trait SqlQuery {
+    fn exec_query<R, F>(&self, _sql: &str, _f: F) -> Result<R, ()>
+    where
+        R: Default,
+        F: FnMut(Statement) -> Result<R, ()>,
+    {
+        panic!("not implemented");
+    }
+}
+
 pub trait Insertable {
     fn insert<S>(&self, _id: Uuid, _sql: &S)
     where
@@ -64,5 +79,24 @@ pub trait Insertable {
         Self: Debug,
     {
         panic!("Unimplemented {:?}", self)
+    }
+}
+
+pub trait Query {
+    fn query<S, R>(&self, _id: Uuid, _sql: &S) -> R
+    where
+        S: SqlExec,
+        Self: Debug,
+    {
+        panic!("Unimplemented {:?}", self)
+    }
+}
+
+pub trait ToJson {
+    fn to_json(&self) -> Value {
+        todo!()
+    }
+    fn to_json_string(&self) -> String {
+        self.to_json().to_string()
     }
 }

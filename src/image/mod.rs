@@ -1,7 +1,7 @@
 use rusqlite::{params, Row};
 use uuid::Uuid;
 
-use crate::element::{Element, Heading, Note};
+use crate::element::{element::Element, heading::Heading, note::Note};
 
 pub enum Mode {
     File,
@@ -14,14 +14,6 @@ where
 {
     fn load(&mut self, mode: Mode) {}
     fn close(self) {}
-
-    fn exec_query_row<T, F>(&self, sql: &str, f: F) -> Option<T>
-    where
-        F: FnOnce(&Row) -> Result<T, rusqlite::Error>,
-        T: Default
-    {
-        todo!()
-    }
 
     fn get_element_by_id(&self, _: Uuid) -> Option<Element> {
         todo!()

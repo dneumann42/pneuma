@@ -1,7 +1,7 @@
 use uuid::Uuid;
 
 use crate::{
-    element::{Element, Fragment, Heading, Note},
+    element::{element::Element, fragment::Fragment, heading::Heading, note::Note},
     generic::{Descr, Insertable, Kind, SqlExec, Title},
 };
 

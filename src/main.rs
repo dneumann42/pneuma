@@ -1,26 +1,33 @@
 use actix_web::{get, web, Responder, Result};
-use element::{Element, Note};
 use image::Image;
-use serde_json::Value;
+use serde_json::{json, Value};
 use sqlite_image::SqliteImage;
 
-use crate::generic::{Kind, ToJson, UniqueId};
+use crate::{
+    element::note::Note,
+    generic::{Kind, ToJson, UniqueId},
+};
 
-pub mod element;
+mod element;
 mod generic;
 mod image;
 mod sqlite_image;
 mod tests;
 
-fn main() {
+#[get("/notes")]
+async fn notes() -> Result<impl Responder> {
     let mut img = SqliteImage::new("demo".to_string());
-
     img.load(image::Mode::File);
 
-    img.add_element(Element::note("Hwllo".to_string(), "Des".to_string()));
-    img.add_element(Element::note("Hwllo1".to_string(), "Des".to_string()));
-    img.add_element(Element::note("Hwllo2".to_string(), "Des".to_string()));
-    img.add_element(Element::note("Hwllo3".to_string(), "Des".to_string()));
+    let notes: Vec<Value> = img.get_all_notes().iter().map(Note::to_json).collect();
+    Ok(web::Json(json!(notes)))
+}
 
-    img.close();
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    use actix_web::{App, HttpServer};
+    HttpServer::new(|| App::new().service(notes))
+        .bind(("127.0.0.1", 4000))?
+        .run()
+        .await
 }

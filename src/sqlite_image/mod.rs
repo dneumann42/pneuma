@@ -1,5 +1,4 @@
 mod insertables;
-mod queries;
 
 use core::panic;
 
@@ -7,7 +6,7 @@ use rusqlite::{params, Connection, Params, Row, Statement};
 use uuid::Uuid;
 
 use crate::{
-    element::{self, Element, Heading, Note},
+    element::{element::Element, heading::Heading, note::Note},
     generic::{Insertable, Kind, Named, SqlExec, SqlQuery, Title, UniqueId},
     image::{Image, Mode},
 };
@@ -117,10 +116,10 @@ impl Image for SqliteImage {
         let kind = self.get_kind(id);
         if kind.as_str() == Note::kind_const().as_str() {
             self.get_note_by_id(id)
-                .map(|note| Element::make(id, element::Fragment::Note(note)))
+                .map(|note| Element::make(id, crate::element::fragment::Fragment::Note(note)))
         } else if kind.as_str() == Heading::kind_const().as_str() {
             self.get_note_by_id(id)
-                .map(|note| Element::make(id, element::Fragment::Note(note)))
+                .map(|note| Element::make(id, crate::element::fragment::Fragment::Note(note)))
         } else {
             None
         }
@@ -147,14 +146,6 @@ impl Image for SqliteImage {
     fn add_element(&self, el: Element) -> Uuid {
         el.insert(el.uid(), self);
         el.uid()
-    }
-
-    fn exec_query_row<T, F>(&self, sql: &str, f: F) -> Option<T>
-    where
-        F: FnOnce(&Row) -> Result<T, rusqlite::Error>,
-        T: Default,
-    {
-        todo!()
     }
 
     fn get_all_notes(&self) -> Vec<Note> {

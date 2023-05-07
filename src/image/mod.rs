@@ -12,7 +12,9 @@ pub trait Image
 where
     Self: Sized,
 {
-    fn load(&mut self, mode: Mode) {}
+    fn connect(&mut self, mode: Mode) {}
+    fn create(&mut self) {}
+    fn start(&mut self, mode: Mode) {}
     fn close(self) {}
 
     fn get_element_by_id(&self, _: Uuid) -> Option<Element> {
@@ -23,7 +25,7 @@ where
         todo!()
     }
 
-    fn get_all_notes(&self) -> Vec<Note> {
+    fn get_all_notes(&self) -> Vec<Element> {
         todo!()
     }
 

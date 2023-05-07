@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 regex = "*"
-serde = "*"
+serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 rusqlite = "0.29.0"
 actix-web = "4"

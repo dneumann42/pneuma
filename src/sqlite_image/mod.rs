@@ -1,12 +1,13 @@
 mod insertables;
 
 use core::panic;
+use std::str::FromStr;
 
 use rusqlite::{params, Connection, Params, Row, Statement};
 use uuid::Uuid;
 
 use crate::{
-    element::{element::Element, heading::Heading, note::Note},
+    element::{element::Element, fragment::Fragment, heading::Heading, note::Note},
     generic::{Insertable, Kind, Named, SqlExec, SqlQuery, Title, UniqueId},
     image::{Image, Mode},
 };
@@ -30,12 +31,13 @@ impl SqliteImage {
     }
 
     pub fn get_kind(&self, id: Uuid) -> String {
-        fn query(mut stmt: Statement, id: Uuid) -> Result<String, ()> {
-            Ok(stmt
-                .query_row(params![id.to_string()], |row| {
-                    Ok(row.get::<usize, String>(0)?)
-                })
-                .unwrap_or("".to_string()))
+        fn query(mut stmt: Statement, id: Uuid) -> Result<String, String> {
+            match stmt.query_row(params![id.to_string()], |row| {
+                Ok(row.get::<usize, String>(0)?)
+            }) {
+                Ok(ok) => Ok(ok),
+                Err(err) => Err(err.to_string().to_owned()),
+            }
         }
 
         self.exec_query(GET_KIND, |s| query(s, id))
@@ -43,7 +45,15 @@ impl SqliteImage {
     }
 
     fn to_note(row: &Row) -> Result<Note, rusqlite::Error> {
-        Ok(Note::new(row.get(1)?, row.get(2)?))
+        Ok(Note::new(&row.get(1)?, &row.get(2)?))
+    }
+
+    fn to_note_element(row: &Row) -> Result<Element, rusqlite::Error> {
+        let id: String = row.get(0)?;
+        Ok(Element::make(
+            Uuid::from_str(id.as_str()).unwrap_or(Uuid::new_v4()),
+            Fragment::Note(Note::new(&row.get(1)?, &row.get(2)?)),
+        ))
     }
 
     fn to_heading(row: &Row) -> Result<Heading, rusqlite::Error> {
@@ -67,10 +77,10 @@ impl SqlExec for SqliteImage {
 }
 
 impl SqlQuery for SqliteImage {
-    fn exec_query<R, F>(&self, sql: &str, f: F) -> Result<R, ()>
+    fn exec_query<R, F>(&self, sql: &str, f: F) -> Result<R, String>
     where
         R: Default,
-        F: FnOnce(Statement) -> Result<R, ()>,
+        F: FnOnce(Statement) -> Result<R, String>,
     {
         if let Some(conn) = &self.conn {
             match conn.prepare(sql) {
@@ -90,15 +100,23 @@ impl Named for SqliteImage {
 }
 
 impl Image for SqliteImage {
-    fn load(&mut self, mode: Mode) {
+    fn connect(&mut self, mode: Mode) {
         self.conn = Connection::open(match mode {
             Mode::File => format!("{}.sqlite", self.name()).to_string(),
             Mode::Memory => ":memory:".to_string(),
         })
-        .ok();
+        .ok()
+    }
+
+    fn create(&mut self) {
         self.exec(ELEMENTES_TABLE, ());
         self.exec(NOTES_TABLE, ());
         self.exec(HEADINGS_TABLE, ());
+    }
+
+    fn start(&mut self, mode: Mode) {
+        self.connect(mode);
+        self.create();
         println!("[TABLES CREATED]");
     }
 
@@ -148,24 +166,20 @@ impl Image for SqliteImage {
         el.uid()
     }
 
-    fn get_all_notes(&self) -> Vec<Note> {
+    fn get_all_notes(&self) -> Vec<Element> {
         match self.exec_query(GET_NOTES, |mut stmt| {
-            let x = stmt.query_map([], SqliteImage::to_note);
-
-            match x {
-                Ok(xx) => {
-                    let mut result: Vec<Note> = vec![];
-
-                    for p in xx {
+            match stmt.query_map([], SqliteImage::to_note_element) {
+                Ok(mapped_rows) => {
+                    let mut result: Vec<Element> = vec![];
+                    for p in mapped_rows {
                         match p {
                             Ok(v) => result.push(v),
                             Err(_) => panic!(""),
                         }
                     }
-
                     Ok(result)
                 }
-                Err(e) => panic!("EERRR: {:?}", e),
+                Err(e) => panic!("Error: {:?}", e),
             }
         }) {
             Ok(xs) => xs,

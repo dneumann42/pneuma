@@ -33,7 +33,7 @@ impl Element {
         &self.fragment
     }
 
-    pub fn note(title: String, descr: String) -> Self {
+    pub fn note(title: &String, descr: &String) -> Self {
         Self::new(Fragment::Note(Note::new(title, descr)))
     }
 
@@ -45,7 +45,7 @@ impl Element {
 impl ToJson for Element {
     fn to_json(&self) -> Value {
         json!({
-            "type": "Element",
+            "kind": "element",
             "id": self.uid().to_string(),
             "fragment": self.fragment.to_json()
         })

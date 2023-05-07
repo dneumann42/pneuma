@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod queries {
     use crate::{
-        element::{Element, Heading, Note},
+        element::{element::Element, heading::Heading, note::Note},
         generic::Kind,
         image::{Image, Mode},
         sqlite_image::SqliteImage,
@@ -10,9 +10,11 @@ mod queries {
     #[test]
     fn it_can_query_kind() {
         let mut img = SqliteImage::new("test".to_owned());
-        img.load(Mode::Memory);
-        let a = img.add_element(Element::note("".to_string(), "".to_string()));
+        img.start(Mode::Memory);
+        let a = img.add_element(Element::note(&"".to_string(), &"".to_string()));
         let b = img.add_element(Element::heading(1));
+        assert_eq!(Note::kind_const(), "note");
+        assert_eq!(Heading::kind_const(), "heading");
         assert_eq!(Note::kind_const(), img.get_element_kind_by_id(a));
         assert_eq!(Heading::kind_const(), img.get_element_kind_by_id(b));
     }
@@ -24,13 +26,13 @@ mod queries {
     #[test]
     fn it_can_query_all_notes() {
         let mut img = SqliteImage::new("test".to_owned());
-        img.load(Mode::Memory);
+        img.start(Mode::Memory);
 
         let xs = vec![
-            Element::note("Hwllo".to_string(), "Des".to_string()),
-            Element::note("Hwllo1".to_string(), "Des".to_string()),
-            Element::note("Hwllo2".to_string(), "Des".to_string()),
-            Element::note("Hwllo3".to_string(), "Des".to_string()),
+            Element::note(&"Hwllo".to_string(), &"Des".to_string()),
+            Element::note(&"Hwllo1".to_string(), &"Des".to_string()),
+            Element::note(&"Hwllo2".to_string(), &"Des".to_string()),
+            Element::note(&"Hwllo3".to_string(), &"Des".to_string()),
         ];
 
         img.add_element(xs[0].clone());

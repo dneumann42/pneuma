@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{error::Error, fmt::Debug};
 
 use rusqlite::{Params, Row, Statement};
 use serde_json::Value;
@@ -63,10 +63,10 @@ pub trait SqlExec {
 }
 
 pub trait SqlQuery {
-    fn exec_query<R, F>(&self, _sql: &str, _f: F) -> Result<R, ()>
+    fn exec_query<R, F>(&self, _sql: &str, _f: F) -> Result<R, String>
     where
         R: Default,
-        F: FnMut(Statement) -> Result<R, ()>,
+        F: FnMut(Statement) -> Result<R, String>,
     {
         panic!("not implemented");
     }

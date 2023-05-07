@@ -1,16 +1,20 @@
+use serde::{Serialize, Deserialize};
 use serde_json::{json, Value};
 
 use crate::generic::{Descr, Kind, Title, TitleDescr, ToJson};
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Note {
     title: String,
     descr: String,
 }
 
 impl Note {
-    pub fn new(title: String, descr: String) -> Self {
-        Self { title, descr }
+    pub fn new(title: &String, descr: &String) -> Self {
+        Self {
+            title: title.clone(),
+            descr: descr.clone(),
+        }
     }
 }
 
@@ -33,7 +37,7 @@ impl Kind for Note {
         Note::kind_const()
     }
     fn kind_const() -> String {
-        String::new()
+        "note".to_owned()
     }
 }
 

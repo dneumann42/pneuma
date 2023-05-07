@@ -3,7 +3,7 @@ mod insertables;
 use core::panic;
 use std::str::FromStr;
 
-use rusqlite::{params, Connection, Params, Row, Statement};
+use rusqlite::{params, Connection, MappedRows, Params, Row, Statement};
 use uuid::Uuid;
 
 use crate::{
@@ -170,13 +170,13 @@ impl Image for SqliteImage {
         match self.exec_query(GET_NOTES, |mut stmt| {
             match stmt.query_map([], SqliteImage::to_note_element) {
                 Ok(mapped_rows) => {
-                    let mut result: Vec<Element> = vec![];
-                    for p in mapped_rows {
-                        match p {
-                            Ok(v) => result.push(v),
-                            Err(_) => panic!(""),
-                        }
-                    }
+                    let result: Vec<Element> = mapped_rows
+                        .into_iter()
+                        .map(|p| match p {
+                            Ok(v) => v,
+                            Err(_) => todo!(),
+                        })
+                        .collect();
                     Ok(result)
                 }
                 Err(e) => panic!("Error: {:?}", e),

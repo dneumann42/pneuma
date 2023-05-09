@@ -3,4 +3,5 @@ CREATE TABLE IF NOT EXISTS notes (
     title TEXT NOT NULL,
     descr TEXT NOT NULL,
     FOREIGN KEY(id) REFERENCES elements(id)
+    ON DELETE CASCADE
 );

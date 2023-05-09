@@ -1,4 +1,5 @@
-use actix_web::web;
+use actix_cors::Cors;
+use actix_web::{http, web};
 use image::Image;
 use sqlite_image::SqliteImage;
 
@@ -20,7 +21,10 @@ async fn main() -> std::io::Result<()> {
 
     use actix_web::{App, HttpServer};
     HttpServer::new(|| {
+        let cors = Cors::permissive();
+
         App::new()
+            .wrap(cors)
             .service(notes)
             .route("/post/add-note", web::post().to(add_note))
     })

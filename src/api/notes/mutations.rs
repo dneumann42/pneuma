@@ -4,7 +4,7 @@ use serde_json::json;
 
 use crate::{
     element::element::Element,
-    image::{self, Image},
+    image::{self, image_mutations::ImageAdds, Image},
     sqlite_image::SqliteImage,
 };
 

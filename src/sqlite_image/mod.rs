@@ -9,7 +9,11 @@ use uuid::Uuid;
 use crate::{
     element::{element::Element, fragment::Fragment, heading::Heading, note::Note},
     generic::{Insertable, Kind, Named, SqlExec, SqlQuery, Title, UniqueId},
-    image::{Image, Mode},
+    image::{
+        image_mutations::{ImageAdds, ImageDeletes, ImageMutations},
+        image_queries::ImageQueries,
+        Image, Mode,
+    },
 };
 
 const ELEMENTES_TABLE: &str = include_str!("../sql/tables/elements_table.sql");
@@ -117,7 +121,6 @@ impl Image for SqliteImage {
     fn start(&mut self, mode: Mode) {
         self.connect(mode);
         self.create();
-        println!("[TABLES CREATED]");
     }
 
     fn close(self) {
@@ -125,45 +128,48 @@ impl Image for SqliteImage {
         let _ = conn.close();
         println!("[CLOSED]");
     }
+}
 
-    fn get_element_kind_by_id(&self, id: Uuid) -> String {
-        self.get_kind(id)
+// Mutations
+
+impl ImageMutations for SqliteImage {}
+
+impl ImageAdds for SqliteImage {
+    fn add_element(&self, el: Element) -> Uuid {
+        el.insert(el.uid(), self);
+        el.uid()
     }
+}
 
-    fn get_element_by_id(&self, id: Uuid) -> Option<Element> {
+impl ImageDeletes for SqliteImage {
+    fn delete_element(&self, _id: Uuid) {
+        todo!()
+    }
+}
+
+// Queries
+
+impl ImageQueries for SqliteImage {
+    fn get_element(&self, id: Uuid) -> Option<Element> {
         let kind = self.get_kind(id);
         if kind.as_str() == Note::kind_const().as_str() {
-            self.get_note_by_id(id)
+            self.get_note(id)
                 .map(|note| Element::make(id, crate::element::fragment::Fragment::Note(note)))
         } else if kind.as_str() == Heading::kind_const().as_str() {
-            self.get_note_by_id(id)
+            self.get_note(id)
                 .map(|note| Element::make(id, crate::element::fragment::Fragment::Note(note)))
         } else {
             None
         }
     }
 
-    fn get_note_by_id(&self, id: Uuid) -> Option<Note> {
+    fn get_note(&self, id: Uuid) -> Option<Note> {
         self.exec_query(GET_NOTE, |mut stmt| {
             Ok(stmt
                 .query_row(params![id.to_string()], SqliteImage::to_note)
                 .unwrap_or(Default::default()))
         })
         .ok()
-    }
-
-    fn get_heading_by_id(&self, id: Uuid) -> Option<Heading> {
-        self.exec_query(GET_NOTE, |mut stmt| {
-            Ok(stmt
-                .query_row(params![id.to_string()], SqliteImage::to_heading)
-                .unwrap_or(Default::default()))
-        })
-        .ok()
-    }
-
-    fn add_element(&self, el: Element) -> Uuid {
-        el.insert(el.uid(), self);
-        el.uid()
     }
 
     fn get_all_notes(&self) -> Vec<Element> {

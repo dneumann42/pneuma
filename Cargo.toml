@@ -10,6 +10,7 @@ regex = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 rusqlite = "0.29.0"
+actix-cors = "*"
 actix-web = "4"
 
 [dependencies.uuid]

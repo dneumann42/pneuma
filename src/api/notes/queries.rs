@@ -2,6 +2,7 @@ use actix_web::{get, web, Responder, Result};
 use serde_json::{json, Value};
 
 use crate::generic::ToJson;
+use crate::image::image_queries::ImageQueries;
 use crate::{
     element::element::Element,
     image::{self, Image},

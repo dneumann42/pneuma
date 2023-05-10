@@ -7,7 +7,7 @@ use crate::generic::{
     json::{FromJson, ToJson},
 };
 
-type EId = String;
+pub type EId = String;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Note {

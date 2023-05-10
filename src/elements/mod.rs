@@ -24,8 +24,8 @@ pub enum Status {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
-    content: String,
-    status: Status,
+    pub content: String,
+    pub status: Status,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -36,7 +36,7 @@ pub struct Document {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-enum Fragment {
+pub enum Fragment {
     Note(Note),
     Task(Task),
     Doc(Document),
@@ -44,14 +44,14 @@ enum Fragment {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Elem {
-    id: EId,
-    fragment: Fragment,
+    pub id: EId,
+    pub fragment: Fragment,
 }
 
 impl Elem {
-    pub fn make() -> Elem {
+    pub fn make(id: Uuid) -> Elem {
         Elem {
-            id: Uuid::new_v4().to_string(),
+            id: id.to_string(),
             fragment: Fragment::Note(Note {
                 content: "".to_string(),
             }),
@@ -65,6 +65,20 @@ impl Elem {
                 content: content.into(),
             }),
         }
+    }
+
+    pub fn task<T: Into<String>>(content: T) -> Elem {
+        Elem {
+            id: Uuid::new_v4().to_string(),
+            fragment: Fragment::Task(Task {
+                content: content.into(),
+                status: Status::Incomplete,
+            }),
+        }
+    }
+
+    pub fn frag(&self) -> &Fragment {
+        &self.fragment
     }
 }
 

@@ -4,9 +4,9 @@ pub trait Conn {
     fn raw(&self) -> &Connection;
     fn exec<T: Into<String>, P: Params>(&self, sql: T, params: P) {
         match self.raw().execute(&sql.into(), params) {
-            Ok(_) => {}
+            Ok(ok) => println!("ok {:?}", ok),
             // TODO: handle this
-            Err(_) => {}
+            Err(err) => println!("error {:?}", err),
         }
     }
 
@@ -42,6 +42,29 @@ pub trait Conn {
                     f(row).map_err(|s| rusqlite::Error::InvalidParameterName(s))
                 })
                 .map_err(|s| s.to_string())
+            })?
+    }
+
+    fn query_rows<R, P: Params, F>(&self, sql: &str, ps: P, mut f: F) -> Result<Vec<R>, String>
+    where
+        F: FnMut(&Row) -> Result<R, String>,
+    {
+        self.raw()
+            .prepare(sql)
+            .map_err(|e| e.to_string())
+            .map(|mut stmt| {
+                match stmt.query_map(ps, |row| {
+                    f(row).map_err(|s| rusqlite::Error::InvalidParameterName(s))
+                }) {
+                    Ok(v) => {
+                        let mut vs = vec![];
+                        for x in v {
+                            vs.push(x.map_err(|e| e.to_string())?);
+                        }
+                        Ok(vs)
+                    }
+                    Err(e) => Err(e.to_string()),
+                }
             })?
     }
 }
